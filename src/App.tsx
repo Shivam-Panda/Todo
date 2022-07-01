@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { DragDropContext, Draggable, Droppable } from 'react-beautiful-dnd';
 
 const App: React.FC = () => {
   const [list, setList] = useState<Array<string>>([]);
@@ -10,24 +11,49 @@ const App: React.FC = () => {
 
   return (
     <div>
-      {list.map((val, ind) => {
-        return (
-          <div>
-            <p>{val}</p>
-            <button onClick={() => {
-              let l = []
-              for(let i = 0; i < list.length; i++) {
-                if(i == ind) {
-                  // Do Nothing
-                } else {
-                  l.push(list[i]);
-                }
-                setList(l);
+      <DragDropContext onDragEnd={(res) => {
+        if(!res.destination) return;
+
+        const c = list;
+
+        const [reorder] = c.splice(res.source.index, 1);
+        c.splice(res.destination.index, 0, reorder)
+        setList(c);
+        
+      }}>
+        <Droppable droppableId='todo' type='TEXT'>
+          {(p) => (
+            <ul {...p.droppableProps} ref={p.innerRef}>
+              {
+                list.map((val, i) => {
+                  return (
+                    <Draggable index={i} draggableId={i.toString()}>
+                      {(p) => (
+                        <div {...p.dragHandleProps} {...p.draggableProps} ref={p.innerRef}>
+                          <p {...p.dragHandleProps} {...p.draggableProps} ref={p.innerRef}>{val}</p>
+                          <button {...p.dragHandleProps} {...p.draggableProps} ref={p.innerRef} onClick={() => {
+                            let l = [];
+                            for(let j = 0; j < list.length; j++) {
+                              if(j == i) {
+                                // Do Nothing
+                              } else {
+                                l.push(list[i]); 
+                              }
+                              setList(l);
+                            }
+                          }}>Delete</button>
+                        </div>
+                      )}
+                    </Draggable>
+                  )
+                })
               }
-            }}>Delete</button>
-          </div>
-        )
-      })}
+              {p.placeholder}
+            </ul>
+          )}
+        </Droppable>
+
+      </DragDropContext>
       <input value={word} onKeyDown={(e) => {
         if(e.key == 'Enter') {
           let cur = list;
